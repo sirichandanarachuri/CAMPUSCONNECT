@@ -14,7 +14,10 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
 class StudentProfileSerializer(serializers.ModelSerializer):
     user = serializers.PrimaryKeyRelatedField(read_only=True)
-    profile = UserProfileSerializer(read_only=True)
+    profile = serializers.SerializerMethodField()
+
+    def get_profile(self, obj):
+        return UserProfileSerializer(obj.user.profile).data if hasattr(obj.user, "profile") else None
 
     class Meta:
         model = StudentProfile
@@ -81,6 +84,8 @@ class StudentNotificationSerializer(serializers.ModelSerializer):
 
 
 class InterviewSerializer(serializers.ModelSerializer):
+    job_detail = serializers.SerializerMethodField()
+    company_name = serializers.CharField(source="company.company_name", read_only=True)
     class Meta:
         model = Interview
         fields = [
@@ -96,13 +101,21 @@ class InterviewSerializer(serializers.ModelSerializer):
             "status",
             "created_at",
             "updated_at",
+            "application",
+            "mode",
+            "job_detail",
+            "company_name",
         ]
-        read_only_fields = ["id", "student", "company", "created_at", "updated_at"]
+        read_only_fields = ["id", "student", "company", "created_at", "updated_at", "job_detail", "company_name"]
+
+    def get_job_detail(self, obj):
+        return {"id": obj.job_id, "title": obj.job.title, "company": obj.company.company_name}
 
 
 class JobApplicationSerializer(serializers.ModelSerializer):
-    job = serializers.PrimaryKeyRelatedField(queryset=Job.objects.all())
+    job = serializers.PrimaryKeyRelatedField(queryset=Job.objects.filter(is_active=True))
     student = serializers.PrimaryKeyRelatedField(read_only=True)
+    job_detail = serializers.SerializerMethodField()
 
     class Meta:
         model = JobApplication
@@ -114,8 +127,12 @@ class JobApplicationSerializer(serializers.ModelSerializer):
             "cover_letter",
             "applied_at",
             "updated_at",
+            "job_detail",
         ]
-        read_only_fields = ["id", "student", "applied_at", "updated_at"]
+        read_only_fields = ["id", "student", "status", "applied_at", "updated_at", "job_detail"]
+
+    def get_job_detail(self, obj):
+        return {"id": obj.job_id, "title": obj.job.title, "company": obj.job.company.company_name, "location": obj.job.location}
 
     def validate(self, attrs):
         request = self.context.get("request")
@@ -133,6 +150,10 @@ class JobApplicationSerializer(serializers.ModelSerializer):
 
         if job and not job.is_eligible_for(student_profile):
             raise serializers.ValidationError("You are not eligible for this job.")
+
+        from django.utils import timezone
+        if job and job.application_deadline and job.application_deadline <= timezone.now():
+            raise serializers.ValidationError("The application deadline has passed.")
 
         if JobApplication.objects.filter(student=student_profile, job=job).exists():
             raise serializers.ValidationError("You have already applied for this job.")

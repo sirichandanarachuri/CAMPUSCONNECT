@@ -10,7 +10,7 @@ from apps.students.models import StudentProfile
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=8)
-    role = serializers.ChoiceField(choices=UserRole.choices, required=True)
+    role = serializers.ChoiceField(choices=[UserRole.STUDENT, UserRole.COMPANY], required=True)
     phone_number = serializers.CharField(required=False, allow_blank=True, default="")
 
     class Meta:
@@ -39,9 +39,12 @@ class RegisterSerializer(serializers.ModelSerializer):
             **validated_data,
         )
         UserProfile.objects.create(user=user, role=role, phone_number=phone_number)
-        # If the user registers as a STUDENT, create an empty StudentProfile so student dashboard can load immediately.
+        # Public registration is intentionally restricted to students and companies.
         if role == UserRole.STUDENT:
             StudentProfile.objects.create(user=user, full_name=f"{user.first_name} {user.last_name}".strip() or user.username)
+        elif role == UserRole.COMPANY:
+            from apps.companies.models import CompanyProfile
+            CompanyProfile.objects.create(user=user, company_name=user.first_name or user.username, company_email=user.email)
         return user
 
 

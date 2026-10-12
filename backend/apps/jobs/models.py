@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 
 from apps.companies.models import CompanyProfile
 from apps.students.models import StudentProfile
@@ -22,6 +23,7 @@ class Job(models.Model):
     min_year = models.IntegerField(default=1)
     max_year = models.IntegerField(default=5)
     department = models.CharField(max_length=200, blank=True, default="")
+    application_deadline = models.DateTimeField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -41,7 +43,10 @@ class Job(models.Model):
             return False
         if student_profile.year_of_study > self.max_year:
             return False
-        if self.department and student_profile.department != self.department:
+        departments = [department.strip().casefold() for department in self.department.split(",") if department.strip()]
+        if departments and student_profile.department.strip().casefold() not in departments:
+            return False
+        if self.application_deadline and self.application_deadline <= timezone.now():
             return False
         return True
 
@@ -50,6 +55,7 @@ class JobApplication(models.Model):
     class ApplicationStatus(models.TextChoices):
         APPLIED = "APPLIED", "Applied"
         SHORTLISTED = "SHORTLISTED", "Shortlisted"
+        INTERVIEW = "INTERVIEW", "Interview"
         REJECTED = "REJECTED", "Rejected"
         SELECTED = "SELECTED", "Selected"
 

@@ -94,7 +94,7 @@ class PlacementApplicationViewSet(viewsets.ReadOnlyModelViewSet):
         return JobApplication.objects.select_related("student__user", "job__company").all()
 
 
-class PlacementInterviewViewSet(viewsets.ReadOnlyModelViewSet):
+class PlacementInterviewViewSet(viewsets.ModelViewSet):
     serializer_class = InterviewSummarySerializer
     permission_classes = [IsPlacementOfficer]
 
@@ -115,6 +115,7 @@ class PlacementStatsViewSet(viewsets.ViewSet):
             "shortlisted": JobApplication.objects.filter(status="SHORTLISTED").count(),
             "selected": JobApplication.objects.filter(status="SELECTED").count(),
             "rejected": JobApplication.objects.filter(status="REJECTED").count(),
+            "total_interviews": Interview.objects.count(),
         }
         serializer = PlacementStatsSerializer(stats)
         return Response(serializer.data)
@@ -129,6 +130,19 @@ class PlacementNotificationViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(target_user=self.request.user)
+
+    @action(detail=False, methods=["post"], url_path="announce")
+    def announce(self, request):
+        title = request.data.get("title", "Placement announcement").strip()
+        message = request.data.get("message", "").strip()
+        if not title or not message:
+            return Response({"detail": "A title and message are required."}, status=status.HTTP_400_BAD_REQUEST)
+        from apps.students.models import Notification
+        Notification.objects.bulk_create([
+            Notification(student=student, title=title, message=message)
+            for student in StudentProfile.objects.all()
+        ])
+        return Response({"detail": "Announcement sent."}, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=["patch"], url_path="mark-read")
     def mark_read(self, request, *args, **kwargs):

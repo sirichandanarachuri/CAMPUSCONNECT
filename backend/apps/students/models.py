@@ -101,12 +101,14 @@ class Interview(models.Model):
         CANCELLED = "CANCELLED", "Cancelled"
 
     student = models.ForeignKey("students.StudentProfile", on_delete=models.CASCADE, related_name="interviews")
+    application = models.ForeignKey("jobs.JobApplication", on_delete=models.CASCADE, related_name="interviews", null=True, blank=True)
     job = models.ForeignKey("jobs.Job", on_delete=models.CASCADE, related_name="interviews")
     company = models.ForeignKey("companies.CompanyProfile", on_delete=models.CASCADE, related_name="company_interviews")
     interview_round = models.CharField(max_length=100, blank=True, default="")
     scheduled_at = models.DateTimeField()
     location = models.CharField(max_length=255, blank=True, default="")
     meeting_link = models.URLField(blank=True, default="")
+    mode = models.CharField(max_length=20, choices=[("ONLINE", "Online"), ("ONSITE", "On-site")], default="ONLINE")
     notes = models.TextField(blank=True, default="")
     status = models.CharField(max_length=20, choices=InterviewStatus.choices, default=InterviewStatus.SCHEDULED)
     created_at = models.DateTimeField(auto_now_add=True)

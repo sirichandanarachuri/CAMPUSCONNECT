@@ -4,7 +4,7 @@ from rest_framework import serializers
 from apps.accounts.models import UserProfile
 from apps.companies.models import CompanyProfile
 from apps.jobs.models import Job, JobApplication
-from apps.students.models import StudentProfile
+from apps.students.models import Interview, StudentProfile
 from apps.placements.models import PlacementOfficerProfile
 
 
@@ -110,7 +110,7 @@ class JobApplicationAdminSerializer(serializers.ModelSerializer):
 
 class InterviewAdminSerializer(serializers.ModelSerializer):
     class Meta:
-        model = "apps.students.models.Interview"
+        model = Interview
         fields = [
             "id",
             "student",

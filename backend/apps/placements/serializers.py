@@ -163,4 +163,5 @@ class PlacementStatsSerializer(serializers.Serializer):
     shortlisted = serializers.IntegerField()
     selected = serializers.IntegerField()
     rejected = serializers.IntegerField()
+    total_interviews = serializers.IntegerField()
 

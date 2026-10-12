@@ -63,8 +63,6 @@ class AuthViewSet(viewsets.ViewSet):
             "roles": [
                 {"value": UserRole.STUDENT, "label": "Student"},
                 {"value": UserRole.COMPANY, "label": "Company"},
-                {"value": UserRole.PLACEMENT_OFFICER, "label": "Placement Officer"},
-                {"value": UserRole.ADMIN, "label": "Admin"},
             ]
         })
 

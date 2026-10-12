@@ -40,6 +40,8 @@ class AdminUserViewSet(viewsets.ReadOnlyModelViewSet):
     @action(detail=True, methods=["patch"], url_path="toggle-active")
     def toggle_active(self, request, *args, **kwargs):
         user = self.get_object()
+        if user == request.user:
+            return Response({"detail": "You cannot deactivate your own account."}, status=400)
         user.is_active = not user.is_active
         user.save()
         serializer = self.get_serializer(user)
@@ -54,7 +56,7 @@ class AdminStudentViewSet(viewsets.ReadOnlyModelViewSet):
         return StudentProfile.objects.select_related("user").all()
 
 
-class AdminCompanyViewSet(viewsets.ReadOnlyModelViewSet):
+class AdminCompanyViewSet(viewsets.ModelViewSet):
     serializer_class = CompanyAdminSerializer
     permission_classes = [IsAdminUser]
 
@@ -70,7 +72,7 @@ class AdminPlacementOfficerViewSet(viewsets.ReadOnlyModelViewSet):
         return PlacementOfficerProfile.objects.select_related("user").all()
 
 
-class AdminJobViewSet(viewsets.ReadOnlyModelViewSet):
+class AdminJobViewSet(viewsets.ModelViewSet):
     serializer_class = JobAdminSerializer
     permission_classes = [IsAdminUser]
 
@@ -86,7 +88,7 @@ class AdminApplicationViewSet(viewsets.ReadOnlyModelViewSet):
         return JobApplication.objects.select_related("student__user", "job__company").all()
 
 
-class AdminInterviewViewSet(viewsets.ReadOnlyModelViewSet):
+class AdminInterviewViewSet(viewsets.ModelViewSet):
     serializer_class = InterviewAdminSerializer
     permission_classes = [IsAdminUser]
 

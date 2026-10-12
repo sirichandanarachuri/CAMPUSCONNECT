@@ -48,7 +48,13 @@ class EducationViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         student = StudentProfile.objects.get(user=self.request.user)
-        serializer.save(student=student)
+        application = serializer.save(student=student)
+        CompanyNotification = __import__("apps.companies.models", fromlist=["CompanyNotification"]).CompanyNotification
+        CompanyNotification.objects.create(
+            company=application.job.company,
+            title="New application",
+            message=f"{student.full_name} applied for {application.job.title}.",
+        )
 
 
 class SkillViewSet(viewsets.ModelViewSet):
@@ -87,7 +93,7 @@ class StudentJobApplicationViewSet(viewsets.ModelViewSet):
         serializer.save(student=student)
 
 
-class StudentInterviewViewSet(viewsets.ModelViewSet):
+class StudentInterviewViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = InterviewSerializer
     permission_classes = [IsStudentUser]
 
@@ -102,6 +108,8 @@ class StudentNotificationViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Notification.objects.filter(student__user=self.request.user)
 
+    http_method_names = ["get", "head", "options", "patch"]
+
     @action(detail=True, methods=["patch"], url_path="mark-read")
     def mark_read(self, request, *args, **kwargs):
         notification = self.get_object()
@@ -109,6 +117,15 @@ class StudentNotificationViewSet(viewsets.ModelViewSet):
         notification.save()
         serializer = self.get_serializer(notification)
         return Response(serializer.data)
+
+    @action(detail=False, methods=["patch"], url_path="mark-all-read")
+    def mark_all_read(self, request):
+        self.get_queryset().filter(is_read=False).update(is_read=True)
+        return Response({"detail": "All notifications marked as read."})
+
+    @action(detail=False, methods=["get"], url_path="unread-count")
+    def unread_count(self, request):
+        return Response({"count": self.get_queryset().filter(is_read=False).count()})
 
 
 class StudentDashboardViewSet(viewsets.ViewSet):
@@ -134,6 +151,7 @@ class StudentDashboardViewSet(viewsets.ViewSet):
                 "job_type": job.job_type,
                 "min_cgpa": job.min_cgpa,
                 "department": job.department,
+                "application_deadline": job.application_deadline,
             })
         return Response(data)
 
