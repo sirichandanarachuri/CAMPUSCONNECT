@@ -48,13 +48,7 @@ class EducationViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         student = StudentProfile.objects.get(user=self.request.user)
-        application = serializer.save(student=student)
-        CompanyNotification = __import__("apps.companies.models", fromlist=["CompanyNotification"]).CompanyNotification
-        CompanyNotification.objects.create(
-            company=application.job.company,
-            title="New application",
-            message=f"{student.full_name} applied for {application.job.title}.",
-        )
+        serializer.save(student=student)
 
 
 class SkillViewSet(viewsets.ModelViewSet):
