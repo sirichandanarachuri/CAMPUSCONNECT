@@ -1,7 +1,19 @@
 import axios from 'axios';
 
+const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL?.replace(/\/+$/, '');
+
+// Local development remains zero-config. Production must set
+// VITE_API_BASE_URL when the frontend and API are deployed separately.
+export const API_BASE_URL = configuredApiBaseUrl || (
+  import.meta.env.DEV ? 'http://127.0.0.1:8000' : ''
+);
+
+if (import.meta.env.PROD && !configuredApiBaseUrl) {
+  console.error('VITE_API_BASE_URL must be set for the production frontend build.');
+}
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000',
+  baseURL: API_BASE_URL,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',

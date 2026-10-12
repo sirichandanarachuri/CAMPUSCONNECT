@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { getStudentResume, uploadStudentResume, updateStudentResume } from '../../services/studentService';
+import { API_BASE_URL } from '../../services/api';
 
 const StudentResumePage = () => {
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
+  const apiBaseUrl = API_BASE_URL;
   const [resume, setResume] = useState(null);
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(true);

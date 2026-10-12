@@ -4,3 +4,7 @@ djangorestframework-simplejwt==5.5.1
 django-cors-headers
 python-dotenv
 mysqlclient
+gunicorn
+whitenoise
+dj-database-url
+psycopg2-binary

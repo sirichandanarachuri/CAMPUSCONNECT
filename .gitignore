@@ -22,6 +22,8 @@ ENV/
 *.log
 .env
 .env.*
+# Safe configuration templates are intentionally versioned.
+!.env.example
 
 # IDE
 .idea/
